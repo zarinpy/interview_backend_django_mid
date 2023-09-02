@@ -1,16 +1,25 @@
 from rest_framework.response import Response
 from rest_framework import generics
-
+from rest_framework.decorators import action
+from rest_framework.viewsets import GenericViewSet
+from rest_framework.mixins import ListModelMixin, CreateModelMixin
 from interview.order.models import Order, OrderTag
 from interview.order.serializers import OrderSerializer, OrderTagSerializer
 
 
 # Create your views here.
-class OrderListCreateView(generics.ListCreateAPIView):
+class OrderListCreateView(GenericViewSet, ListModelMixin, CreateModelMixin):
     queryset = Order.objects.all()
-    serializer_class = OrderSerializer
+    serializer_classes = {
+        "list": OrderSerializer,
+        "create": OrderSerializer,
+        "tags": OrderTagSerializer,
+    }
 
-    def list(self, request, *args, **kwargs):
+    def get_serializer_class(self):
+        return self.serializer_classes[self.action]
+
+    def list(self, request, *args, **kwargs) -> Response:
         start_embargo_date = kwargs.get("start_embargo_date", None)
         end_embargo_date = kwargs.get("end_embargo_date", None)
         queryset = self.get_queryset()
@@ -26,6 +35,16 @@ class OrderListCreateView(generics.ListCreateAPIView):
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"])
+    def tags(self, request, pk=None) -> Response:
+        try:
+            order = self.get_queryset().get(pk=pk)
+        except Order.DoesNotExist:
+            return Response({"detail": "Order not found."}, status=404)
+
+        serializer = self.get_serializer(order.tags.all(), many=True)
         return Response(serializer.data)
 
 
