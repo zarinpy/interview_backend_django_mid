@@ -3,6 +3,7 @@ from rest_framework import generics
 from rest_framework.decorators import action
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.mixins import ListModelMixin, CreateModelMixin
+from rest_framework.views import APIView
 from interview.order.models import Order, OrderTag
 from interview.order.serializers import OrderSerializer, OrderTagSerializer
 
@@ -51,3 +52,15 @@ class OrderListCreateView(GenericViewSet, ListModelMixin, CreateModelMixin):
 class OrderTagListCreateView(generics.ListCreateAPIView):
     queryset = OrderTag.objects.all()
     serializer_class = OrderTagSerializer
+
+
+class OrdersByTagView(APIView):
+    def get(self, request, tag_id):
+        try:
+            tag = OrderTag.objects.get(pk=tag_id)
+        except OrderTag.DoesNotExist:
+            return Response({"detail": "Tag not found."}, status=400)
+
+        orders = tag.orders.all()
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data, status=200)
