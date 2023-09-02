@@ -1,10 +1,8 @@
 from rest_framework.response import Response
-from rest_framework.request import Request
 from rest_framework import generics
-from rest_framework.views import APIView
 
 from interview.order.models import Order, OrderTag
-from interview.order.serializers import OrderSerializer, OrderTagSerializer, DeactivateOrderSerializer
+from interview.order.serializers import OrderSerializer, OrderTagSerializer
 
 
 # Create your views here.
@@ -22,9 +20,13 @@ class OrderListCreateView(generics.ListCreateAPIView):
         if end_embargo_date:
             queryset = queryset.filter(embargo_date__lte=start_embargo_date)
 
-        serializer = self.serializer_class(queryset, many=True)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-        return Response(serializer.data, 200)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class OrderTagListCreateView(generics.ListCreateAPIView):
