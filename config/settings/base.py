@@ -16,8 +16,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -42,7 +40,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'interview.core',
     'interview.inventory',
-    'interview.order'
+    'interview.order',
+    'interview.profiles.apps.ProfilesConfig',
 ]
 
 MIDDLEWARE = [
@@ -90,7 +89,7 @@ DATABASES = {
     }
 }
 
-
+AUTH_USER_MODEL = "profiles.UserProfile"
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
@@ -132,3 +131,7 @@ STATIC_ROOT = 'interview/static'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 3
+}
